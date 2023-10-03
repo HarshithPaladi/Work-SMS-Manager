@@ -1,5 +1,6 @@
 package com.example.myworkmanagerexpl
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -7,16 +8,20 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.telephony.SmsManager
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +60,27 @@ class MainActivity : ComponentActivity() {
                     // periodic or onetime? = onetime
                     workManager = WorkManager.getInstance(applicationContext)
 
-                       val powerConstraint = Constraints.Builder().setRequiredNetworkType(networkType = NetworkType.NOT_ROAMING).setRequiresCharging(true).build()
+                       val powerConstraint = Constraints.Builder().setRequiredNetworkType(networkType = NetworkType.NOT_ROAMING).setRequiresCharging(false).build()
                     val taskData = Data.Builder().putString("MESSAGE_STATUS", "Notify Done.").build()
+                    val getPermission = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission()
+                    ) { isGranted ->
+                        if (isGranted) {
+                            //permission accepted do somthing
+                            var smsManager: SmsManager
 
+                            smsManager= SmsManager.getDefault()
+                            smsManager.sendTextMessage("+917339324331"
+                                ,null,"Hi how are u",null,null)
+                        } else {
+                            //permission not accepted show message
+                        }
+                    }
+//i used SideEffect to launch permission request when screen recomposed
+//you can call it inside a button click without SideEffect
+                    SideEffect {
+                        getPermission.launch(Manifest.permission.SEND_SMS)
+                    }
 
                     //PeriodicWorkRequest
                     val request = OneTimeWorkRequest.Builder(MyWorkCls::class.java).setConstraints(powerConstraint).build()
